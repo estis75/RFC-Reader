@@ -66,18 +66,28 @@ fn main() {
             // if let Some()
 
         }else if Some('<') == first_character{
+            let num = input.filter(|&c| c == '<').count();
             if current_page_number == 1 {
                 eprintln!("this is the first page");
                 continue;
             }else{
-                current_page_number -= 1;
+                current_page_number = if current_page_number > (1+num) {
+                    current_page_number - (1+num)
+                }else{ 
+                    1
+                };
             }
         }else if Some('>') == first_character{
+            let num = input.filter(|&c| c == '>').count();
             if current_page_number == pages.len() {
                 eprintln!("this is the last page");
                 continue;
             }else{
-                current_page_number += 1;
+                current_page_number = if current_page_number + (1+num) <= pages.len() {
+                    current_page_number + (1+num)
+                }else{ 
+                    pages.len()
+                };
             }
         }else if Some('q') == first_character{
             break;
