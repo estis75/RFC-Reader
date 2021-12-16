@@ -1,6 +1,9 @@
 use std::env;
 use std::fs;
 
+extern crate colored;
+use colored::*;
+
 fn main() {
     let filename = if let Some(filename) = env::args().nth(1) {
         filename
@@ -37,13 +40,19 @@ fn main() {
     }
 
     let mut current_page_number = 1;
+    let mut has_error = false;
     loop {
-        if let Some((_, one_page)) = pages.iter().nth(current_page_number-1) {
-            println!("{}", one_page);
-            println!("{:3}/{:3}", current_page_number, pages.len());
-        }else{
-            eprintln!("invalid page number {}", current_page_number);
+        if !has_error {
+            if let Some((_, one_page)) = pages.iter().nth(current_page_number-1) {
+                println!("{}", one_page);
+                println!("{:3}/{:3}", current_page_number, pages.len());
+            }else{
+                let output_errors = format!("invalid page number {}", current_page_number);
+                eprintln!("{}", output_errors.red());
+            }
         }
+        has_error = true;
+
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
         let mut input = input.chars();
@@ -55,20 +64,21 @@ fn main() {
                 if 1 <= number && number <= pages.len() {
                     number
                 }else{
-                    eprintln!("invalid page number :{}", number);
+                    let output_errors = format!("invalid page number :{}", number);
+                    eprintln!("{}", output_errors.red());
                     continue;
                 }
             }else{
-                eprintln!("invalid input :{}", input);
+                let output_errors = format!("invalid input :{}", input);
+                eprintln!("{}", output_errors.red());
                 continue;
             };
-            
-            // if let Some()
 
         }else if Some('<') == first_character{
             let num = input.filter(|&c| c == '<').count();
             if current_page_number == 1 {
-                eprintln!("this is the first page");
+                let output_errors = format!("this is the first page");
+                eprintln!("{}", output_errors.red());
                 continue;
             }else{
                 current_page_number = if current_page_number > (1+num) {
@@ -80,7 +90,8 @@ fn main() {
         }else if Some('>') == first_character{
             let num = input.filter(|&c| c == '>').count();
             if current_page_number == pages.len() {
-                eprintln!("this is the last page");
+                let output_errors = format!("this is the last page");
+                eprintln!("{}", output_errors.red());
                 continue;
             }else{
                 current_page_number = if current_page_number + (1+num) <= pages.len() {
@@ -93,13 +104,17 @@ fn main() {
             break;
         }else if Some('\n') == first_character {
             if current_page_number == pages.len() {
-                eprintln!("this is the last page");
+                let output_errors = format!("this is the last page");
+                eprintln!("{}", output_errors.red());
                 continue;
             }else{
                 current_page_number += 1;
             }
         }else{
-            eprintln!("invalid input {}", input.collect::<String>());
+            let output_errors = format!("invalid input {}", input.collect::<String>());
+            eprintln!("{}", output_errors.red());
+            continue;
         }
+        has_error = false;
     }
 }
