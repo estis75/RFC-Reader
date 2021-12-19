@@ -1,14 +1,30 @@
 use std::env;
 use std::fs;
+use std::path::Path;
 
 extern crate colored;
 use colored::*;
 
 fn main() {
-    let filename = if let Some(filename) = env::args().nth(1) {
+    let filename: String = if let Some(filename) = env::args().nth(1) {
         filename
     }else{
         panic!("please specify filename with arguments")
+    };
+    let history_filename: String = {
+        let filename = filename.clone();
+        let p = Path::new(&filename);
+        if let Some(parent) = p.parent() {
+            if parent.is_dir() {
+                // almost
+                parent.to_str().unwrap().to_string() + "/." + p.file_name().unwrap().to_str().unwrap()
+            }else{
+                // has no parent in path but is not root
+                String::from(".") + p.to_str().unwrap()
+            }
+        }else{
+            String::from(".") + p.to_str().unwrap()
+        }
     };
 
     let content: String = fs::read_to_string(filename.clone()).unwrap();
@@ -39,7 +55,21 @@ fn main() {
         }
     }
 
-    let mut current_page_number = 1;
+    let mut current_page_number = 
+        if Path::new(&history_filename).exists() {
+            let number = fs::read_to_string(history_filename.clone()).unwrap();
+            if let Ok(number) = number.trim().parse::<usize>() {
+                if 1 <= number && number <= pages.len() {
+                    number
+                }else{
+                    1
+                }
+            }else{
+                1
+            }
+        }else{
+            1
+        };
     let mut has_error = false;
     loop {
         if !has_error {
@@ -59,8 +89,7 @@ fn main() {
         let first_character = input.next();
         if Some(':') == first_character {
             let input = input.collect::<String>();
-            current_page_number = if let Ok(number) = input.trim().parse::<u64>() {
-                let number: usize = number as usize;
+            current_page_number = if let Ok(number) = input.trim().parse::<usize>() {
                 if 1 <= number && number <= pages.len() {
                     number
                 }else{
@@ -101,6 +130,7 @@ fn main() {
                 };
             }
         }else if Some('q') == first_character{
+            fs::write(history_filename, format!("{}", current_page_number)).unwrap();
             break;
         }else if Some('\n') == first_character {
             if current_page_number == pages.len() {
