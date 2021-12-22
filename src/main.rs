@@ -9,7 +9,34 @@ fn main() {
     let filename: String = if let Some(filename) = env::args().nth(1) {
         filename
     }else{
-        panic!("please specify filename with arguments")
+        if cfg!(target_os = "linux") {
+            let output = std::process::Command::new("bash")
+                .arg("-c")
+                .arg("ls -ta .* | head -1")
+                .output()
+                .expect("failed to execute process");
+            let stdout =  output.stdout;
+            if stdout.len() != 0 {
+                match String::from_utf8(stdout) {
+                    Ok(v) => {
+                        let mut tv = v.chars();
+                        tv.next();
+                        let filename = tv.collect::<String>().trim_end().to_string();
+                        let p = Path::new(&filename);
+                        if p.exists() {
+                            filename
+                        }else{
+                            panic!("please specify filename with arguments")
+                        }
+                    },
+                    Err(e) => panic!("invalid string {}", e)
+                }
+            }else{
+                panic!("please specify filename with arguments")
+            }
+        }else{
+            panic!("please specify filename with arguments")
+        }
     };
     let history_filename: String = {
         let filename = filename.clone();
